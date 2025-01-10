@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personality Assessment</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .section-header {
+            background-color: #f8f9fa;
+            padding: 10px;
+            margin: 20px 0 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .question {
+            margin-bottom: 20px;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .question-text {
+            margin-bottom: 10px;
+        }
+        .options {
+            display: flex;
+            gap: 20px;
+        }
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        #submitBtn {
+            width: 100%;
+            padding: 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        #submitBtn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        #submitBtn:hover:not(:disabled) {
+            background-color: #0056b3;
+        }
+        #results {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            display: none;
+        }
+        .percentage-bar {
+            background-color: #e9ecef;
+            height: 20px;
+            border-radius: 10px;
+            margin-top: 5px;
+            position: relative;
+        }
+        .percentage-fill {
+            height: 100%;
+            border-radius: 10px;
+            background-color: #4CAF50;
+            transition: width 0.5s ease-in-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Personality Assessment</h1>
+        <form id="assessmentForm">
+            <div id="questionsContainer"></div>
+            <button type="button" id="submitBtn" disabled>Please answer all questions (0/40)</button>
+        </form>
+        <div id="results">
+            <h2>Your Results</h2>
+            <p id="personalityType"></p>
+            <div id="dimensionBreakdown"></div>
+        </div>
+    </div>
+
+    <script>
+        const questions = {
+            EI: [
+                {
+                    text: "I prefer social gatherings with lots of people over small, intimate gatherings",
+                    positive: "E"
+                },
+                {
+                    text: "I feel energized after spending time with others",
+                    positive: "E"
+                },
+                {
+                    text: "I prefer to work in teams rather than independently",
+                    positive: "E"
+                },
+                {
+                    text: "I tend to think out loud rather than process thoughts internally",
+                    positive: "E"
+                },
+                {
+                    text: "I seek out social interaction when feeling down",
+                    positive: "E"
+                },
+                {
+                    text: "I prefer quiet, solitary activities",
+                    positive: "I"
+                },
+                {
+                    text: "I need time alone to recharge after social events",
+                    positive: "I"
+                },
+                {
+                    text: "I prefer to focus deeply on one task at a time",
+                    positive: "I"
+                },
+                {
+                    text: "I prefer written communication over verbal communication",
+                    positive: "I"
+                },
+                {
+                    text: "I tend to reflect before taking action",
+                    positive: "I"
+                }
+            ],
+            SN: [
+                {
+                    text: "I focus more on present realities than future possibilities",
+                    positive: "S"
+                },
+                {
+                    text: "I prefer concrete facts over abstract theories",
+                    positive: "S"
+                },
+                {
+                    text: "I trust practical experience more than theoretical concepts",
+                    positive: "S"
+                },
+                {
+                    text: "I prefer step-by-step instructions over general guidelines",
+                    positive: "S"
+                },
+                {
+                    text: "I focus more on details than the big picture",
+                    positive: "S"
+                },
+                {
+                    text: "I enjoy thinking about theoretical possibilities",
+                    positive: "N"
+                },
+                {
+                    text: "I often think about future implications and patterns",
+                    positive: "N"
+                },
+                {
+                    text: "I enjoy discovering new, unconventional approaches",
+                    positive: "N"
+                },
+                {
+                    text: "I trust my intuition and hunches",
+                    positive: "N"
+                },
+                {
+                    text: "I prefer looking at the big picture over specific details",
+                    positive: "N"
+                }
+            ],
+            TF: [
+                {
+                    text: "I make decisions based primarily on logic and facts",
+                    positive: "T"
+                },
+                {
+                    text: "I value objectivity over personal values in decision-making",
+                    positive: "T"
+                },
+                {
+                    text: "I prefer to analyze problems rather than focus on emotions",
+                    positive: "T"
+                },
+                {
+                    text: "I tend to prioritize truth over harmony",
+                    positive: "T"
+                },
+                {
+                    text: "I prefer direct communication over tactful communication",
+                    positive: "T"
+                },
+                {
+                    text: "I consider how decisions affect others' feelings",
+                    positive: "F"
+                },
+                {
+                    text: "I value harmony and consensus in group situations",
+                    positive: "F"
+                },
+                {
+                    text: "I trust my feelings when making important decisions",
+                    positive: "F"
+                },
+                {
+                    text: "I naturally notice how others are feeling",
+                    positive: "F"
+                },
+                {
+                    text: "I prefer to focus on people over tasks",
+                    positive: "F"
+                }
+            ],
+            JP: [
+                {
+                    text: "I prefer to have things planned and settled",
+                    positive: "J"
+                },
+                {
+                    text: "I like to have a structured schedule",
+                    positive: "J"
+                },
+                {
+                    text: "I prefer to complete one project before starting another",
+                    positive: "J"
+                },
+                {
+                    text: "I make lists and stick to them",
+                    positive: "J"
+                },
+                {
+                    text: "I prefer clear expectations and deadlines",
+                    positive: "J"
+                },
+                {
+                    text: "I prefer to keep my options open",
+                    positive: "P"
+                },
+                {
+                    text: "I enjoy spontaneity and flexibility",
+                    positive: "P"
+                },
+                {
+                    text: "I adapt easily to changing situations",
+                    positive: "P"
+                },
+                {
+                    text: "I prefer to go with the flow rather than strict planning",
+                    positive: "P"
+                },
+                {
+                    text: "I enjoy starting new projects even if others aren't finished",
+                    positive: "P"
+                }
+            ]
+        };
+
+        const dimensionNames = {
+            EI: ["Extraversion (E)", "Introversion (I)"],
+            SN: ["Sensing (S)", "Intuition (N)"],
+            TF: ["Thinking (T)", "Feeling (F)"],
+            JP: ["Judging (J)", "Perceiving (P)"]
+        };
+
+        // Initialize the form
+        const questionsContainer = document.getElementById('questionsContainer');
+        const submitBtn = document.getElementById('submitBtn');
+        const results = document.getElementById('results');
+        let answers = {};
+        let questionCount = 0;
+
+        // Create questions
+        Object.entries(questions).forEach(([dimension, dimensionQuestions], sectionIndex) => {
+            const sectionHeader = document.createElement('div');
+            sectionHeader.className = 'section-header';
+            sectionHeader.textContent = `Section ${sectionIndex + 1}`;
+            questionsContainer.appendChild(sectionHeader);
+
+            dimensionQuestions.forEach((question) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <div class="question-text">
+                        <strong>${questionCount + 1}.</strong> ${question.text}
+                    </div>
+                    <div class="options">
+                        <label class="radio-option">
+                            <input type="radio" name="question${questionCount}" value="yes"> Yes
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="question${questionCount}" value="no"> No
+                        </label>
+                    </div>
+                `;
+                questionsContainer.appendChild(questionDiv);
+                questionCount++;
+            });
+        });
+
+        // Handle radio button changes
+        document.querySelectorAll('input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                const questionIndex = parseInt(e.target.name.replace('question', ''));
+                answers[questionIndex] = e.target.value === 'yes';
+                updateSubmitButton();
+            });
+        });
+
+        function updateSubmitButton() {
+            const answeredCount = Object.keys(answers).length;
+            submitBtn.disabled = answeredCount < questionCount;
+            submitBtn.textContent = answeredCount < questionCount ? 
+                `Please answer all questions (${answeredCount}/${questionCount})` : 
+                'Show Results';
+        }
+
+        function calculateResults() {
+            const scores = {
+                EI: { E: 0, I: 0 },
+                SN: { S: 0, N: 0 },
+                TF: { T: 0, F: 0 },
+                JP: { J: 0, P: 0 }
+            };
+
+            let currentIndex = 0;
+            Object.entries(questions).forEach(([dimension, dimensionQuestions]) => {
+                dimensionQuestions.forEach((question) => {
+                    const answer = answers[currentIndex];
+                    if (answer) { // if "yes"
+                        scores[dimension][question.positive]++;
+                    } else { // if "no"
+                        scores[dimension][question.positive === 'E' ? 'I' : 
+                                       question.positive === 'S' ? 'N' :
+                                       question.positive === 'T' ? 'F' : 'P']++;
+                    }
+                    currentIndex++;
+                });
+            });
+
+            const type = 
+                (scores.EI.E > scores.EI.I ? 'E' : 'I') +
+                (scores.SN.S > scores.SN.N ? 'S' : 'N') +
+                (scores.TF.T > scores.TF.F ? 'T' : 'F') +
+                (scores.JP.J > scores.JP.P ? 'J' : 'P');
+
+            const percentages = {
+                EI: (scores.EI.E / 10) * 100,
+                SN: (scores.SN.S / 10) * 100,
+                TF: (scores.TF.T / 10) * 100,
+                JP: (scores.JP.J / 10) * 100
+            };
+
+            return { type, scores, percentages };
+        }
+
+        submitBtn.addEventListener('click', () => {
+            const result = calculateResults();
+            
+            // Display results on current page
+            document.getElementById('results').style.display = 'block';
+            document.getElementById('personalityType').textContent = result.type;
+            
+            const dimensionBreakdown = document.getElementById('dimensionBreakdown');
+            dimensionBreakdown.innerHTML = '';
+            Object.entries(result.percentages).forEach(([dimension, percentage]) => {
+                const dimensionDiv = document.createElement('div');
+                dimensionDiv.className = 'dimension-result';
+                const [leftName, rightName] = dimensionNames[dimension];
+                dimensionDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>${leftName}</span>
+                        <span>${rightName}</span>
+                    </div>
+                    <div class="percentage-bar">
+                        <div class="percentage-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>${Math.round(percentage)}%</span>
+                        <span>${Math.round(100 - percentage)}%</span>
+                    </div>
+                `;
+                dimensionBreakdown.appendChild(dimensionDiv);
+            });
+
+            // Encode results for URL
+            const resultsParam = encodeURIComponent(JSON.stringify({
+                type: result.type,
+                percentages: result.percentages
+            }));
+
+            // Redirect to results page with parameters
+            window.location.href = 'https://suzettaland.github.io/assessments/index.html?personality=' + resultsParam;
+        });
+    </script>
+</body>
+</html>
